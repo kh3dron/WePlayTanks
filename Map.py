@@ -22,7 +22,7 @@ class Map:
                     keith = Wall(80*(tick-1), 80*n)
                     self.__walls.append(keith)
                 if (r == "Z"):
-                    james = Tank(80*(tick-.5), 80*(n-.5))
+                    james = Tank(80*(tick-.5), 80*(n+.5))
                     self.__playerTank.append(james)
 
 

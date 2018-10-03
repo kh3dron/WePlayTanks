@@ -1,3 +1,6 @@
+from Round import *
+import numpy, math
+
 class Tank:
 
     def __init__(self, x, y):
@@ -39,5 +42,12 @@ class Tank:
     def moveDown(self):
         self.__y += 3
 
-    def speak(self):
-        print("JUST!")
+    def fire(self, aim, speed):
+        targetx = aim[0]
+        targety = aim[1]
+        dx = (self.__x+10 - targetx) * -1
+
+        dy = (self.__y+10 - targety) * -1
+
+        round = Round(self.__x, self.__y, dx/15, dy/15)
+        return round
