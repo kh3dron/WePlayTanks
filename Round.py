@@ -1,7 +1,6 @@
 class Round:
 
     def __init__(self, speed):
-        print("Round created!")
         self.__speed = speed
 
     def getSpeed(self):
