@@ -31,13 +31,6 @@ def drawAllWalls(map, screen):
         drawWall(wall, screen)
     drawPlayerTank(map.getPlayerTank(), screen)
 
-def loadCourse(Map):
-    course = Map.getCourse()
-
-    for n in range(0, 9):
-        for m in range(0, 16):
-            if course[n][m] == "X":
-                print(4)
 
 def drawCrosshairs(mouse, screen):
     x, y = mouse
@@ -48,13 +41,47 @@ def drawCrosshairs(mouse, screen):
 def drawRound(round, screen):
     pygame.draw.circle(screen, WHITE, round.getCoords(), 8)
 
+def bounceRounds(round, map, screen):
+    for wall in map.getWalls():
+        x = wall.getX()
+        y = wall.getY()
+        if (abs(x-round.getX()) < 40) and (round.getY()-y < 40):
+            round.bounceX()
+        if abs(y-round.getY() < 40):
+            round.bounceY()
+
+#these aren't perfect, but they're good enough to work right now
+def tankHitsLeft(tank, map, screen):
+    for wall in map.getWalls():
+        if (wall.getY()-15 <= tank.getY() <= wall.getY()+95):
+            if 0 <= abs(wall.getX()+80 - tank.getX()+15) <= 2:
+                return True
+def tankHitsRight(tank, map, screen):
+    for wall in map.getWalls():
+        if (wall.getY()-15 <= tank.getY() <= wall.getY()+95):
+            if 0 <= abs(wall.getX() - tank.getX()-15) <= 2:
+                return True
+def tankHitsUp(tank, map, screen):
+    for wall in map.getWalls():
+        if (wall.getX()-15 <= tank.getX() <= wall.getX()+95):
+            if 0 <= abs(wall.getY()+80 - tank.getY()+15) <= 2:
+                return True
+def tankHitsDown(tank, map, screen):
+    for wall in map.getWalls():
+        if (wall.getX()-15 <= tank.getX() <= wall.getX()+95):
+            if 0 <= abs(wall.getY() - tank.getY()-15) <= 2:
+                return True
+
+
+
+
+
 def Run():
 
     windowSize = (1280, 720)
     screen = pygame.display.set_mode(windowSize)
     clock = pygame.time.Clock()
     shots = []
-
 
     while True:
 
@@ -66,21 +93,28 @@ def Run():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+            if event.type == pygame.MOUSEBUTTONUP:
+                shots.append(level1.getPlayerTank().fire(mousePosition, 60))
             if event.type == pygame.KEYDOWN:
                 if event.key == K_SPACE:
                     shots.append(level1.getPlayerTank().fire(mousePosition, 60))
 
 
-        #Keys that are being HELD DOWN
+        #Keys that are being HELD DOWN, handle player moves
         keys = pygame.key.get_pressed()
+
         if keys[pygame.K_w]:
-            level1.getPlayerTank().moveUp()
+            if not tankHitsUp(level1.getPlayerTank(), level1, screen):
+                level1.getPlayerTank().moveUp()
         if keys[pygame.K_s]:
-            level1.getPlayerTank().moveDown()
+            if not tankHitsDown(level1.getPlayerTank(), level1, screen):
+                level1.getPlayerTank().moveDown()
         if keys[pygame.K_a]:
-            level1.getPlayerTank().moveLeft()
+            if not tankHitsLeft(level1.getPlayerTank(), level1, screen):
+                level1.getPlayerTank().moveLeft()
         if keys[pygame.K_d]:
-            level1.getPlayerTank().moveRight()
+            if not tankHitsRight(level1.getPlayerTank(), level1, screen):
+                level1.getPlayerTank().moveRight()
 
 
 
@@ -91,6 +125,7 @@ def Run():
             if (n.getX() > 1280 or n.getX() < 0 or n.getY() > 720 or n.getY() < 0):
                 shots.remove(n)
                 break
+            bounceRounds(n, level1, screen)
             n.updatePosition()
             drawRound(n, screen)
         #Always run this

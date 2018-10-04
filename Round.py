@@ -17,8 +17,11 @@ class Round:
         inty = int(self.__y)
         return (intx, inty)
 
-    def bounce(self):
-        pass
+    def bounceX(self):
+        self.__dx = -self.__dx
+
+    def bounceY(self):
+        self.__dy = -self.__dy
 
     def updatePosition(self):
         self.__x += self.__dx
