@@ -42,12 +42,13 @@ class Tank:
     def moveDown(self):
         self.__y += 3
 
+    #Now handles trig functions correctly, same speed everywhere
     def fire(self, aim, speed):
         targetx = aim[0]
         targety = aim[1]
-        dx = (self.__x+10 - targetx) * -1
+        angle = math.atan2(targety-self.__y, targetx-self.__x)
+        dx = math.cos(angle) * speed
+        dy = math.sin(angle) * speed
 
-        dy = (self.__y+10 - targety) * -1
-
-        round = Round(self.__x, self.__y, dx/15, dy/15)
+        round = Round(self.__x, self.__y, dx, dy)
         return round

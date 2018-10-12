@@ -4,8 +4,8 @@ from Round import *
 from Wall import *
 import pygame
 import numpy
-from pygame.locals import *
 import sys
+from pygame.locals import *
 pygame.init()
 
 #Some easy colors
@@ -15,22 +15,17 @@ GREEN = (  0, 255,   0)
 RED =   (255,   0,   0)
 WHITE = (255, 255, 255)
 GREY = (127, 127, 127)
+level1 = Map('./level2')
 
-
-
-level1 = Map('./level1')
 def drawWall(Wall, screen):
     pygame.draw.rect(screen, BLUE, [Wall.getX(), Wall.getY(), 80, 80])
 
-def drawPlayerTank(Tank, screen):
-    pygame.draw.rect(screen, GREEN, [Tank.getX()-15, Tank.getY()-15, 30, 30])
-
+def drawTank(map, Tank, color, screen):
+    pygame.draw.rect(screen, color, [Tank.getX()-15, Tank.getY()-15, 30, 30])
 
 def drawAllWalls(map, screen):
     for wall in map.getWalls():
         drawWall(wall, screen)
-    drawPlayerTank(map.getPlayerTank(), screen)
-
 
 def drawCrosshairs(mouse, screen):
     x, y = mouse
@@ -41,16 +36,25 @@ def drawCrosshairs(mouse, screen):
 def drawRound(round, screen):
     pygame.draw.circle(screen, WHITE, round.getCoords(), 8)
 
-def bounceRounds(round, map, screen):
+#Buggy, works ~90% of the time
+def bounceRoundsX(round, map, screen):
     for wall in map.getWalls():
-        x = wall.getX()
-        y = wall.getY()
-        if (abs(x-round.getX()) < 40) and (round.getY()-y < 40):
-            round.bounceX()
-        if abs(y-round.getY() < 40):
-            round.bounceY()
+        if (wall.getY() < round.getY() < wall.getY()+80):
+            if 0 <= abs(wall.getX() - round.getX()) <= 4 and not round.isDead():
+                round.bounceX()
+            if 0 <= abs(wall.getX()+80 - round.getX()) <= 4 and not round.isDead():
+                round.bounceX()
+
+def bounceRoundsY(round, map, screen):
+    for wall in map.getWalls():
+        if (wall.getX() < round.getX() < wall.getX()+80) :
+            if 0 <= abs(wall.getY() - round.getY()) <= 4 and not round.isDead():
+                round.bounceY()
+            if 0 <= abs(wall.getY()+80 - round.getY()) <= 4 and not round.isDead():
+                round.bounceY()
 
 #these aren't perfect, but they're good enough to work right now
+#They're a frame too slow, will need to add in a predictive method of sorts
 def tankHitsLeft(tank, map, screen):
     for wall in map.getWalls():
         if (wall.getY()-15 <= tank.getY() <= wall.getY()+95):
@@ -72,9 +76,11 @@ def tankHitsDown(tank, map, screen):
             if 0 <= abs(wall.getY() - tank.getY()-15) <= 2:
                 return True
 
-
-
-
+def roundHitsTank(round, tank):
+    if (abs(tank.getX()-round.getX())<15 and abs(tank.getY()-round.getY())<15):
+        return True
+    else:
+        return False
 
 def Run():
 
@@ -82,6 +88,8 @@ def Run():
     screen = pygame.display.set_mode(windowSize)
     clock = pygame.time.Clock()
     shots = []
+    enemyTanks = level1.getEnemyTanks()
+    playerTank = level1.getPlayerTank()
 
     while True:
 
@@ -94,11 +102,8 @@ def Run():
             if event.type == pygame.QUIT:
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONUP:
-                shots.append(level1.getPlayerTank().fire(mousePosition, 60))
-            if event.type == pygame.KEYDOWN:
-                if event.key == K_SPACE:
-                    shots.append(level1.getPlayerTank().fire(mousePosition, 60))
-
+                if len(shots)<5:
+                    shots.append(level1.getPlayerTank().fire(mousePosition, 10))
 
         #Keys that are being HELD DOWN, handle player moves
         keys = pygame.key.get_pressed()
@@ -116,8 +121,6 @@ def Run():
             if not tankHitsRight(level1.getPlayerTank(), level1, screen):
                 level1.getPlayerTank().moveRight()
 
-
-
         screen.fill(GREY)
         drawAllWalls(level1, screen)
         drawCrosshairs(mousePosition, screen)
@@ -125,9 +128,20 @@ def Run():
             if (n.getX() > 1280 or n.getX() < 0 or n.getY() > 720 or n.getY() < 0):
                 shots.remove(n)
                 break
-            bounceRounds(n, level1, screen)
+            if n.isDead():
+                shots.remove(n)
+                break
+            for e in enemyTanks:
+                if roundHitsTank(n, e):
+                    enemyTanks.remove(e)
+                    shots.remove(n)
+            bounceRoundsX(n, level1, screen)
+            bounceRoundsY(n, level1, screen)
             n.updatePosition()
             drawRound(n, screen)
+        for e in enemyTanks:
+            drawTank(level1, e, RED, screen)
+        drawTank(level1, playerTank, GREEN, screen)
         #Always run this
         pygame.display.update()
 

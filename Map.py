@@ -7,10 +7,10 @@ class Map:
         self.__playerTank = []
         self.__course = []
         self.__walls = []
+        self.__enemyTanks = []
 
         with open(file) as f:
             strips = f.read().splitlines()
-
 
         for n in range(0, 9):
             row = []
@@ -24,8 +24,9 @@ class Map:
                 if (r == "Z"):
                     james = Tank(80*(tick-.5), 80*(n+.5))
                     self.__playerTank.append(james)
-
-
+                if (r == "A"):
+                    john = Tank(80*(tick-.5), 80*(n+.5))
+                    self.__enemyTanks.append(john)
             self.__course.append(row)
 
     def loadNextMap(self):
@@ -39,3 +40,6 @@ class Map:
 
     def getWalls(self):
         return self.__walls
+
+    def getEnemyTanks(self):
+        return self.__enemyTanks
